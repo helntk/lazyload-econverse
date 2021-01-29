@@ -1,46 +1,61 @@
 
-const __renderPlaceholders = {
+import { __renderPlaceHolders } from "../index";
 
-    render: ( placeholder ) => {
-        $(".helperComplement").remove();
-
-        if(placeholder ===  'instagram') __renderPlaceholders.methods.renderInsta();
-        if(placeholder ===  'novidades') __renderPlaceholders.methods.renderNovidades();
-
-    },
-    
-    methods: {
-        renderInsta: function(){
-          const  options = {
-            slidesToShow: 2,
-            slidesToScroll: 1,
-            arrows: false,
-            dots: false,
-            autoplay: true,
-            infinite: false
-          }
-           setTimeout(()=>{
-            $('.e-instagram .e-image:not(.slick-initialized, .slick-dots)').slick(options);
-           }, 1000)
-
-
-        },
-        renderSlick: function(){
-
-        },
-        renderNovidades: function(){
-            const options = {
-                slidesToShow: 1,
-                slidesToScroll: 1,
-                arrows: true,
-                dots: false,
-                autoplay: false,
-                infinite: false
-              }
-            $('.e-novidades .shelf > ul:not(.slick-initialized, .slick-dots)').slick(options);
-        }
+const __lazyload = () => {
    
-    }
-}
 
-export default  __renderPlaceholders;
+    const __isItVisible = (node) => {
+        var rect = node.getBoundingClientRect();
+        return (
+            (rect.height > 0 || rect.width > 0) &&
+            rect.bottom >= 0 &&
+            rect.right >= 0 &&
+            rect.top <=
+                (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.left <=
+                (window.innerWidth || document.documentElement.clientWidth)
+        );
+    };
+    const __isElementLoaded = (_element) => _element.hasClass(`is--loaded`);
+
+    const __renderElement = (_element, placeHolder) => {
+        const _noscript = _element.find("noscript").html();
+        _element.find("noscript").remove();
+        _element.addClass("is--loaded").append(_noscript);
+        _element.append(window[placeHolder]);
+        _element.removeAttr("data-template");
+    };
+
+    const __renderVisiblePlaceholder = (placeHolder, _element) => {
+        if (!__isElementLoaded(_element)) {
+            __renderElement(_element, placeHolder);
+
+            __renderPlaceHolders.render(placeHolder);
+        }
+    };
+
+
+
+
+    const __getAllPlaceholders = () => {
+        const placeholders = $(".noscript--container");
+
+        function __foundOnePlaceholder(index, element) {
+            let placeHolder = $(this).attr("data-placeholder");
+
+            const _element = $(this);
+
+            if (__isItVisible(this)) {
+                __renderVisiblePlaceholder(placeHolder, _element);
+            }
+        }
+
+        placeholders.each(__foundOnePlaceholder);
+    };
+
+
+
+    $(window).on("scroll", __getAllPlaceholders);
+};
+
+export { __lazyload };
